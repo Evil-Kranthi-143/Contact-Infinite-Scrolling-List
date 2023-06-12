@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 
 
 const getUsers = async (page, results) => {
-  const response = await fetch(`https://randomuser.me/api/?page=${page}&results=${results}`);
+  const response = await fetch(`https://randomuser.me/api/?page=${page}&results=${500}`);
   const data = await response.json();
   return data.results;
 };
@@ -16,6 +16,8 @@ const App = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [loginError, setLoginError] = useState('');
+  const [scrollPosition, setScrollPosition] = useState(0);
+
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -41,22 +43,39 @@ const App = () => {
     setPage(1);
   };
 
+  const handleScroll = () => {
+    const { scrollTop, scrollHeight, clientHeight } = document.documentElement;
+    const currentPosition = scrollTop + clientHeight;
+    
+    if (currentPosition >= scrollHeight) {
+      loadMoreUsers();
+    }
+    
+    setScrollPosition(currentPosition);
+  };
+
+
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+    };
+  }, [scrollPosition]);
+  
+  
+
   const loadMoreUsers = async () => {
     setIsLoading(true);
-    const newUsers = await getUsers(page, 200);
+    const newUsers = await getUsers(page, 20); 
     setUserList((prevUserList) => [...prevUserList, ...newUsers]);
     setPage((prevPage) => prevPage + 1);
     setIsLoading(false);
   };
+  
+  
+  
 
-  const handleScroll = () => {
-    if (
-      window.innerHeight + document.documentElement.scrollTop ===
-      document.documentElement.offsetHeight
-    ) {
-      loadMoreUsers();
-    }
-  };
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll);
